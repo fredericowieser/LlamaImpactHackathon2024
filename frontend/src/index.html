@@ -4,10 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Llama Hack</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Main screen container */
+        #mainScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            height: 100%;
+        }
+
+        /* Message containers */
+        .messageContainer {
+            display: flex;
+            flex-direction: row;
+            gap: 20px; /* Space between the two divs */
+            flex-grow: 1;
+        }
+
+        #fastMessages,
+        #slowMessages {
+            background-color: blue;
+            color: white;
+            padding: 10px;
+            overflow-y: auto;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        #fastMessages {
+            flex: 2; /* Take up 2/3 of the container */
+        }
+
+        #slowMessages {
+            flex: 1; /* Take up 1/3 of the container */
+        }
+
+        /* Input container at the bottom */
+        #inputContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex-grow: 1; /* Input field takes up the remaining space */
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #backButton {
+            background-color: lightgray;
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Llama Hack</h1>
-    <button id="sendButton">Send Message</button>
-    <script src="preload.js"></script>
+    <!-- Intro Screen -->
+    <div id="introScreen" class="visible">
+        <h1>Welcome to Llama Hack</h1>
+        <button id="startButton">Enter App</button>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="mainScreen" class="hidden">
+        <!-- Two blue divs for messages -->
+        <div class="messageContainer">
+            <div id="fastMessages">fast_periodic_messages</div>
+            <div id="slowMessages">slow_periodic_messages</div>
+        </div>
+
+        <!-- Input container -->
+        <div id="inputContainer">
+            <input type="text" id="messageInput" placeholder="Type your message..." required />
+            <button id="backButton">Back</button>
+        </div>
+    </div>
 </body>
 </html>
