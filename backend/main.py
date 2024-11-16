@@ -1,5 +1,9 @@
 # main.py
 
+import os
+import json
+from groq import Groq
+from pathlib import Path
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -48,16 +52,43 @@ async def websocket_endpoint(websocket: WebSocket):
     logger.info("🔌 New WebSocket connection established")
     
     try:
+        # Convert initial audio to text
+        history = []
+        # Generate initial questions
+        questions = []
         while True:
-            # Get data from frontend
+            # Get audio data from frontend
             data = await websocket.receive_text()
-            logger.info(f"📥 Received message: {data[:50]}...")  # Log first 50 chars
+            logger.info(f"📥 Received audio chunk from frontend")
+            print(data)
             
+            # Convert theis audio data to text
+            logger.info("🔊 Converting audio to text...")
 
+            # Pass this new test chunk with the previous history to the joiner
+            # this will try and give us the correct transcript.
+            logger.info("🔍 Sending audio to joiner for full transcription...")
+
+            # Using the full history generate a summary of the conversation
+            # trying to stick to new doctor notes best practices and only
+            # include the most important information.
+            logger.info("📝 Generating conversation summary...")
+            summary = s
+
+            # Using the full history generate new questions to ask the patient
+            # to get the most information about their condition.
+            logger.info("🔍 Generating follow-up questions...")
+
+            # Generate what questions should be removed from the questions JSON
+            # as they have already been asked/answered.
+            logger.info("🔍 Generating questions to remove...")
+
+            # Remove the questions that have already been asked/answered
+            logger.info("🔍 Removing questions that have already been asked...")
 
             # Create mock response
             response = {
-                "transcript": f"Mock transcript for: {data[:20]}...",
+                "summary": summary,
                 "questions": [
                     "How are you feeling today?",
                     "Any new symptoms?",
@@ -90,6 +121,18 @@ if __name__ == "__main__":
     logger.info("🔍 Testing logging system...")
     logger.info("✅ Logging system working")
     logger.info("="*50)
+
+    # Load API key from config.json (two directories up)
+    config_path = Path(__file__).parent.parent / 'config.json'
+    print(config_path)
+    with open(config_path) as f:
+        config = json.load(f)
+        GROQ_API_KEY = config.get('groq_apikey')
+
+    # Initialize Groq client
+    client = Groq(
+        api_key=GROQ_API_KEY,
+    )
     
     uvicorn.run(
         "main:app", 
