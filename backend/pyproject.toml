@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = ["Frederico Wieser <20886677+fredericowieser@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.115.5"
+uvicorn = "^0.32.0"
+groq = "^0.12.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "build>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
