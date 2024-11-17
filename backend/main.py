@@ -16,7 +16,7 @@ import logging
 from datetime import datetime
 from backend.summary import summariser
 from backend.questions import gen_new_questions, gen_remove_questions
-from backend.transcription import transcibe_conv_slice, join_transcriptions
+from backend.transcription import transcribe_conv_slice, join_transcriptions
 
 # Update the audio path constant to match transcription.py
 AUDIO_PATH = "./audio/"
@@ -41,15 +41,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@dataclass
+"""Maintains a history of the conversation."""
 class ConversationHistory:
-    """Maintains a history of the conversation."""
-    transcript: str = ""
-    summary: str = ""
-    questions: List[str] = field(default_factory=list)
-    doc_notes: str = ""
-    last_processed_time: float = field(default_factory=time.time)
-    buffer_transcripts: List[str] = field(default_factory=list)  # Store individual transcripts
+    def __init__(self, client: Groq, joiner_prompt: str):
+        self.transcript: str = ""
+        self.summary: str = ""
+        self.questions: List[str] = field(default_factory=list)
+        self.doc_notes: str = ""
+        self.last_processed_time: float = field(default_factory=time.time)
+        self.buffer_transcripts: List[str] = field(default_factory=list)  # Store individual transcripts
+        self.client = client
+        self.joiner_prompt = joiner_prompt
 
     def update_transcript(self, new_text: str) -> None:
         """Update transcript and mark time of last update."""
@@ -69,7 +71,7 @@ class ConversationHistory:
                 logger.info(f"Initial transcript: {self.transcript}")
             
             # Join with the next transcript
-            combined = join_transcriptions(self.transcript, self.buffer_transcripts[1])
+            combined = join_transcriptions(self.client, self.joiner_prompt, self.transcript, self.buffer_transcripts[1])
             if combined:
                 self.transcript = combined
                 # Remove the processed transcript from buffer
@@ -80,7 +82,7 @@ class ConversationHistory:
 
 class AudioProcessor:
     """Handles audio processing and maintains conversation state."""
-    def __init__(self, chunk_duration: int = 10, overlap_duration: int = 5):
+    def __init__(self, client:Groq, chunk_duration: int = 10, overlap_duration: int = 5):
         self.chunk_duration = chunk_duration
         self.overlap_duration = overlap_duration
         self.buffer = BytesIO()
@@ -88,6 +90,7 @@ class AudioProcessor:
         self.chunk_count = 0
         self.accumulated_data = BytesIO()
         self.last_transcription_time = 0
+        self.client = client
         logger.info(f"✅ AudioProcessor initialized with chunk_duration={chunk_duration}s, overlap_duration={overlap_duration}s")
         
     async def process_chunk(self, audio_data: bytes, conversation: ConversationHistory) -> str:
@@ -116,7 +119,8 @@ class AudioProcessor:
                     logger.info(f"💾 Saved chunk to: {chunk_filename}")
                     
                     # Transcribe the chunk
-                    transcribed_text = transcibe_conv_slice(
+                    transcribed_text = transcribe_conv_slice(
+                        self.client,
                         chunk_filename,
                         0,
                         self.chunk_duration
@@ -155,7 +159,7 @@ class ConversationManager:
         self.websocket = websocket
         self.client = client
         self.prompts = prompts
-        self.conversation = ConversationHistory()
+        self.conversation = ConversationHistory(client, prompts['joiner'])
         self.audio_processor = AudioProcessor()
         self.last_update_time = 0
         self.update_interval = 10  # Seconds between updates to client
@@ -300,7 +304,7 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info("📚 Loading prompts...")
         prompts = {}
         prompts_path = Path(__file__).parent / 'backend' / 'prompts'
-        for prompt_file in ['best_results.txt', 'new_questions.txt', 'rm_questions.txt', 'summarise.txt']:
+        for prompt_file in ['best_results.txt', 'new_questions.txt', 'rm_questions.txt', 'summarise.txt', 'joiner.txt']:
             with (prompts_path / prompt_file).open('r') as f:
                 prompts[prompt_file.replace('.txt', '')] = f.read()
                 logger.info(f"✅ Loaded {prompt_file}")

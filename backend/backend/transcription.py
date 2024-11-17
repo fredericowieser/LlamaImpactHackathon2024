@@ -44,7 +44,7 @@ def join_transcriptions(client: Groq, joiner_prompt: str, history: str, new_text
     if match is not None: output = match.group(1)
     return output
 
-def transcibe_conv_slice(client: Groq, audio_filename: str, start_timestamp: int, length: int) -> str:
+def transcribe_conv_slice(client: Groq, audio_filename: str, start_timestamp: int, length: int) -> str:
     """Transcribes a section of an audio file.
     Args:
         client: Instantiated Groq client.
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         api_key = "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"
     ) 
 
-    transcription = transcibe_conv_slice(client, "./audio/wildfires.mp3", 15, 10)
+    transcription = transcribe_conv_slice(client, "./audio/wildfires.mp3", 15, 10)
 
     prompt_filename = "./backend/backend/prompts/joiner.txt"
     with open(prompt_filename) as prompt_file:
