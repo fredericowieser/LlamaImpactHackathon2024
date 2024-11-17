@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Llama Hack</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.05);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden; /* Prevent overall app scrolling */
+        }
+        /* Top bar (draggable area) */
+        #topBar {
+            height: 25px;
+            background-color: none;
+            -webkit-app-region: drag; /* Makes the top bar draggable */
+            user-select: none; /* Prevents text selection */
+            border-bottom: 0.5px solid rgb(66, 66, 66); /* Adds 1px grey border to the bottom */
+        }
+
+
+        /* Main screen container */
+        #mainScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            height: calc(100% - 30px); /* Adjust for top bar height */
+            overflow: hidden; /* Prevent main screen scrolling */
+        }
+
+        /* Message containers */
+        .messageContainer {
+            display: flex;
+            flex-direction: row;
+            gap: 20px; /* Space between the two divs */
+            height: calc(100% - 60px); /* Ensure it fits above the input container */
+        }
+
+        #fastMessages,
+        #slowMessages {
+            background-color: none; /* No background */
+            color: white; /* White text */
+            padding: 10px;
+            overflow-y: auto; /* Enable scrolling for overflowing content */
+            flex: 1;
+            border-radius: 10px;
+        }
+
+        #fastMessages {
+            flex: 2.1; /* Take up 2/3 of the container */
+        }
+
+        #slowMessages {
+            flex: 1; /* Take up 1/3 of the container */
+        }
+
+        /* Input container at the bottom */
+        #inputContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px; /* Fixed height for input container */
+        }
+
+        /* Wrapper for input and button */
+        #inputWrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 10px; /* Space between input and button */
+            padding: 0 100px; /* Add padding to squash input and button inward */
+            width: 100%; /* Take full width of the input container */
+        }
+
+
+        #messageInput {
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            flex-grow: 1; /* Input field takes up the remaining space */
+            padding: 10px;
+            border-radius: 10px; /* Rounds the corners */
+            border: none; /* Removes the border */
+            background-color: rgba(18, 18, 18, 0.8); /* Dark grey with opacity */
+            color: white; /* Text colour white */
+            caret-color: white; /* Set caret colour to white */
+            user-select: none; /* Disable text selection */
+            outline: none; /* Removes default focus outline */
+            caret-color: #F64C4C;
+        }
+
+        /* Prevent any focus effects */
+        #messageInput:focus {
+            outline: none; /* No outline on focus */
+        }
+
+        #backButton {
+            background-color: rgba(18, 18, 18, 0.8);
+            color: white;
+            border: none;
+            padding: 0px 10px;
+            font-size: 10px;
+            border-radius: 9px;
+            cursor: pointer;
+        }
+        /* Notification styling */
+
+        .notification {
+            background-color: rgba(255, 255, 255, 0.1); /* Transparent white */
+            color: white; /* White text */
+            border-radius: 8px; /* Rounded corners */
+            padding: 10px; /* Spacing inside */
+            margin-bottom: 10px; /* Space between notifications */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            animation: slide-down 0.3s ease-in-out; /* Animation for new messages */
+            display: -webkit-box; /* Flexbox-like display for ellipsis support */
+            -webkit-box-orient: vertical; /* Specifies vertical stacking for the text */
+            overflow: hidden; /* Ensures content beyond two lines is hidden */
+            text-overflow: ellipsis; /* Adds ellipsis at the end of overflowing text */
+            line-height: 1.5; /* Line height for proper spacing */
+            max-height: calc(1.5em * 2); /* Exactly two lines tall */
+            min-height: calc(1.5em * 2); 
+            font-size: 10px; /* Adjust font size for readability */
+            border: 0.6px solid grey;
+        }
+
+
+        /* Slide-down animation */
+        @keyframes slide-down {
+            from {
+                opacity: 0;
+                transform: translateY(-20px); /* Start slightly above */
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0); /* End at its position */
+            }
+        }
+
+        /* Slide-up animation */
+        @keyframes slide-up {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px); /* End slightly above */
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div id="topBar"></div>
+
+    <!-- Main App Screen -->
+    <div id="mainScreen">
+        <!-- Two blue divs for messages -->
+        <div class="messageContainer">
+            <div id="fastMessages"></div>
+            <div id="slowMessages"></div>
+        </div>
+
+        <!-- Input container -->
+        <div id="inputContainer">
+            <div id="inputWrapper">
+                <input type="text" id="messageInput" placeholder="Type here..." required/>
+                <button id="backButton">⌘+R</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
