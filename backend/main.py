@@ -2,26 +2,42 @@ import os
 import json
 from groq import Groq
 from pathlib import Path
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+<<<<<<< Updated upstream
+=======
+import subprocess
+>>>>>>> Stashed changes
 import asyncio
 from typing import List, Dict, Any
 import numpy as np
 from dataclasses import dataclass, field
 from io import BytesIO
+<<<<<<< Updated upstream
 from pydub import AudioSegment
+=======
+import io
+import wave
+>>>>>>> Stashed changes
 import time
 import uvicorn
 import logging
 from datetime import datetime
+from pydub import AudioSegment
 from backend.summary import summariser
 from backend.questions import gen_new_questions, gen_remove_questions
+<<<<<<< Updated upstream
 from backend.transcription import transcribe_conv_slice, join_transcriptions
 
 # Update the audio path constant to match transcription.py
+=======
+import wave
+import struct
+import tempfile
+
+>>>>>>> Stashed changes
 AUDIO_PATH = "./audio/"
 
-# Set up logging with a more visible format
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -29,10 +45,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI
 app = FastAPI()
 
-# Basic CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,6 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+<<<<<<< Updated upstream
 
 #Maintains a history of the conversation.
 class ConversationHistory:
@@ -154,12 +169,57 @@ class AudioProcessor:
         except Exception as e:
             logger.error(f"❌ Error in process_chunk: {str(e)}")
             return ""
+=======
+@dataclass
+class ConversationHistory:
+    transcript: str = ""
+    summary: str = ""
+    questions: List[str] = field(default_factory=list)
+    doc_notes: str = ""
+    last_processed_time: float = field(default_factory=time.time)
+    buffer_transcripts: List[str] = field(default_factory=list)
+    last_update_time: float = 0
+
+    async def update_transcript(self, new_text: str) -> bool:
+        """
+        Update transcript and return whether a full update should be triggered.
+        Returns True if enough time has passed for a full update.
+        """
+        UPDATE_INTERVAL = 10  # Seconds between full updates
+
+        if new_text:
+            logger.info("\n" + "=" * 50)
+            logger.info("🔄 Updating conversation transcript")
+            logger.info(f"New transcription: {new_text}")
+            
+            # Add new transcription to buffer
+            self.buffer_transcripts.append(new_text)
+            
+            # Join transcripts if we have multiple
+            if len(self.buffer_transcripts) >= 2:
+                self.transcript = " ".join(self.buffer_transcripts)
+                logger.info(f"Updated full transcript: {self.transcript}")
+            else:
+                self.transcript = new_text
+            
+            current_time = time.time()
+            should_update = (current_time - self.last_update_time) >= UPDATE_INTERVAL
+            
+            if should_update:
+                self.last_update_time = current_time
+                logger.info("💫 Triggering full update (summary + questions)")
+            
+            return should_update
+        return False
+
+>>>>>>> Stashed changes
 
 class ConversationManager:
     def __init__(self, websocket: WebSocket, client: Groq, prompts: Dict[str, str]):
         self.websocket = websocket
         self.client = client
         self.prompts = prompts
+<<<<<<< Updated upstream
         self.conversation = ConversationHistory(client, prompts['joiner'])
         self.audio_processor = AudioProcessor(client)
         self.last_update_time = 0
@@ -215,6 +275,22 @@ class ConversationManager:
         try:
             logger.info("📋 Generating new summary...")
             summary = summariser(
+=======
+        self.conversation = ConversationHistory()
+        # Pass the client to AudioProcessor
+        self.audio_processor = AudioProcessor(client=client)
+        self.last_update_time = time.time()
+        self.update_interval = 10
+        logger.info("✅ ConversationManager initialized")
+        
+    async def _process_full_update(self) -> None:
+        """Process full update including summary and questions."""
+        try:
+            logger.info("🔄 Processing full update")
+            
+            # Generate new summary
+            self.conversation.summary = summariser(
+>>>>>>> Stashed changes
                 client=self.client,
                 history=self.conversation.transcript,
                 role=self.prompts['best_results'],
@@ -223,6 +299,7 @@ class ConversationManager:
                 old_summary=self.conversation.summary
             )
             
+<<<<<<< Updated upstream
             logger.info("Generated summary:")
             logger.info("-" * 50)
             logger.info(summary)
@@ -243,6 +320,9 @@ class ConversationManager:
         """Generate and send updated questions."""
         try:
             logger.info("❓ Generating new questions...")
+=======
+            # Generate new questions
+>>>>>>> Stashed changes
             new_questions = gen_new_questions(
                 client=self.client,
                 history=self.conversation.transcript,
@@ -252,6 +332,7 @@ class ConversationManager:
                 doc_notes=self.conversation.doc_notes
             )
             
+<<<<<<< Updated upstream
             logger.info("New questions generated:")
             logger.info("-" * 50)
             # for i, q in enumerate(new_questions, 1):
@@ -260,6 +341,10 @@ class ConversationManager:
             
             if self.conversation.questions:
                 logger.info("🔍 Checking for questions to remove...")
+=======
+            # Process question removals if we have existing questions
+            if self.conversation.questions:
+>>>>>>> Stashed changes
                 removed_questions = gen_remove_questions(
                     client=self.client,
                     history=self.conversation.transcript,
@@ -268,6 +353,7 @@ class ConversationManager:
                     previous_questions=self.conversation.questions,
                     doc_notes=self.conversation.doc_notes
                 )
+<<<<<<< Updated upstream
                 
                 logger.info("Questions to remove:")
                 logger.info("-" * 50)
@@ -292,10 +378,123 @@ class ConversationManager:
             
         except Exception as e:
             logger.error(f"❌ Error in question generation: {str(e)}")
+=======
+                self.conversation.questions = [q for q in new_questions if q not in removed_questions]
+            else:
+                self.conversation.questions = new_questions
+            
+            await self._send_updates()
+            
+        except Exception as e:
+            logger.error(f"❌ Error in full update: {str(e)}")
+
+    async def _send_transcript_update(self) -> None:
+        """Send only transcript update to client."""
+        try:
+            await self.websocket.send_json({
+                "type": "transcript_update",
+                "transcript": self.conversation.transcript
+            })
+            logger.info("📤 Sent transcript update")
+        except Exception as e:
+            logger.error(f"❌ Error sending transcript update: {str(e)}")
+
+    async def _send_updates(self) -> None:
+        """Send full updates to client."""
+        try:
+            logger.info("📤 Sending full update to client")
+            
+            update_data = {
+                "type": "full_update",
+                "transcript": self.conversation.transcript,
+                "summary": self.conversation.summary,
+                "questions": self.conversation.questions
+            }
+            
+            await self.websocket.send_json(update_data)
+            
+            logger.info("\nUpdate details:")
+            logger.info(f"📝 Transcript length: {len(self.conversation.transcript)} chars")
+            logger.info(f"📋 Summary length: {len(self.conversation.summary)} chars")
+            logger.info(f"❓ Questions: {len(self.conversation.questions)}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error sending updates: {str(e)}")
+
+class AudioProcessor:
+    def __init__(self, client):
+        self.client = client
+        self.chunk_count = 0
+        self.accumulated_data = bytearray()
+        self.last_transcription_time = 0
+        self.min_chunk_size = 16000
+        logger.info("AudioProcessor initialized")
+
+    async def process_chunk(self, audio_data: bytes) -> str:
+        """Process a chunk of audio data."""
+        try:
+            current_time = time.time()
+            
+            # Accumulate the binary data
+            if isinstance(audio_data, (bytes, bytearray)):
+                self.accumulated_data.extend(audio_data)
+            else:
+                logger.error(f"❌ Unexpected audio data type: {type(audio_data)}")
+                return ""
+                
+            current_size = len(self.accumulated_data)
+            time_since_last = current_time - self.last_transcription_time
+            
+            # Only process if we have enough data
+            if current_size >= self.min_chunk_size and time_since_last >= 5:
+                self.last_transcription_time = current_time
+                
+                try:
+                    # Save audio chunk to temporary file
+                    with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+                        temp_file.write(bytes(self.accumulated_data))
+                        temp_path = temp_file.name
+                    
+                    # Transcribe using the temporary file
+                    with open(temp_path, 'rb') as audio_file:
+                        file_tuple = (
+                            "audio.webm",     # Filename
+                            audio_file.read(),
+                            "audio/webm"      # MIME type
+                        )
+                        
+                        transcription = self.client.audio.transcriptions.create(
+                            file=file_tuple,
+                            model="whisper-large-v3",
+                            language="en",
+                            response_format="verbose_json"
+                        )
+                    
+                    logger.info(f"✅ Transcription successful: {transcription.text}")
+                    
+                    # Update state
+                    self.chunk_count += 1
+                    overlap_size = min(8000, current_size)
+                    self.accumulated_data = self.accumulated_data[-overlap_size:]
+                    
+                    return transcription.text
+                    
+                finally:
+                    # Cleanup
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                    
+            return ""
+            
+        except Exception as e:
+            logger.error(f"❌ Processing error: {str(e)}")
+            return ""
+>>>>>>> Stashed changes
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+<<<<<<< Updated upstream
     logger.info("\n" + "=" * 80)
     logger.info("🔵 NEW WEBSOCKET CONNECTION")
     logger.info("=" * 80)
@@ -306,11 +505,24 @@ async def websocket_endpoint(websocket: WebSocket):
         prompts = {}
         prompts_path = Path(__file__).parent / 'backend' / 'prompts'
         for prompt_file in ['best_results.txt', 'new_questions.txt', 'rm_questions.txt', 'summarise.txt', 'joiner.txt']:
+=======
+    logger.info("🔵 NEW WEBSOCKET CONNECTION")
+    
+    try:
+        # Load prompts and initialize Groq client
+        logger.info("📚 Loading prompts...")
+        prompts = {}
+        prompts_path = Path(__file__).parent / 'backend' / 'prompts'
+        for prompt_file in ['best_results.txt', 'new_questions.txt', 'rm_questions.txt', 'summarise.txt']:
+>>>>>>> Stashed changes
             with (prompts_path / prompt_file).open('r') as f:
                 prompts[prompt_file.replace('.txt', '')] = f.read()
                 logger.info(f"✅ Loaded {prompt_file}")
         
+<<<<<<< Updated upstream
         # Initialize Groq client
+=======
+>>>>>>> Stashed changes
         logger.info("🔄 Initializing Groq client...")
         config_path = Path(__file__).parent.parent / 'config.json'
         with open(config_path) as f:
@@ -322,6 +534,7 @@ async def websocket_endpoint(websocket: WebSocket):
         
         while True:
             try:
+<<<<<<< Updated upstream
                 # Receive data
                 data = await websocket.receive()
                 
@@ -337,6 +550,37 @@ async def websocket_endpoint(websocket: WebSocket):
                     
             except Exception as e:
                 logger.error(f"❌ Error processing message: {str(e)}")
+=======
+                data = await websocket.receive()
+                
+                if data["type"] == "bytes":
+                    # Handle audio data
+                    audio_data = data["bytes"]
+                    logger.info(f"📥 Received audio chunk: {len(audio_data)} bytes")
+                    
+                    transcribed_text = await manager.audio_processor.process_chunk(audio_data)
+                    if transcribed_text:
+                        should_update = await manager.conversation.update_transcript(transcribed_text)
+                        if should_update:
+                            await manager._process_full_update()
+                        else:
+                            await manager._send_transcript_update()
+                            
+                elif data["type"] == "text":
+                    # Handle text messages (like [RESTART])
+                    if data["text"] == "[RESTART]":
+                        manager = ConversationManager(websocket, client, prompts)
+                        await websocket.send_json({
+                            "type": "transcript_update",
+                            "transcript": "Session restarted"
+                        })
+                    
+            except WebSocketDisconnect:
+                logger.info("👋 WebSocket disconnected")
+                break
+            except Exception as e:
+                logger.error(f"❌ Error in websocket loop: {str(e)}")
+>>>>>>> Stashed changes
                 continue
                 
     except Exception as e:
@@ -345,7 +589,10 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info("👋 WebSocket connection closed")
         logger.info("=" * 80 + "\n")
 
+<<<<<<< Updated upstream
 # Update the startup event to create the correct directory
+=======
+>>>>>>> Stashed changes
 @app.on_event("startup")
 async def startup_event():
     """Create necessary directories on startup."""
@@ -353,7 +600,10 @@ async def startup_event():
     logger.info(f"✅ Ensured audio directory exists at: {AUDIO_PATH}")
 
 if __name__ == "__main__":
+<<<<<<< Updated upstream
     # Add some visible startup logs
+=======
+>>>>>>> Stashed changes
     print("\n" + "=" * 80)
     print("🚀 STARTING HEALTHCARE ASSISTANT SERVER")
     print("=" * 80 + "\n")

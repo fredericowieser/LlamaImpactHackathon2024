@@ -32,8 +32,8 @@ async def fast_periodic_messages(websocket):
 async def slow_periodic_messages(websocket):
     try:
         while True:
-            await asyncio.sleep(random.randint(15, 20))  # Simulate slower periodic updates
-            slow_message = f"Slow message at {random.randint(101, 200)}"
+            await asyncio.sleep(random.randint(2, 10))  # Simulate slower periodic updates
+            slow_message = f"Slow message at with two lines to show notification at {random.randint(101, 200)}"
             print(f"Sending slow message: {slow_message}")
             await websocket.send(slow_message)
     except websockets.ConnectionClosed:

@@ -12,5 +12,8 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^33.2.0"
+  },
+  "dependencies": {
+    "websockets": "^0.2.0"
   }
 }
