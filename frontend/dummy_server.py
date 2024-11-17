@@ -14,6 +14,7 @@ async def receive_messages(websocket):
         print(f"Error: {e}")
 
 # Periodically send fast messages to the client
+# THE DUMMY SUMMARY
 async def fast_periodic_messages(websocket):
     try:
         while True:
@@ -27,6 +28,7 @@ async def fast_periodic_messages(websocket):
         print(f"Error: {e}")
 
 # Periodically send slower messages to the client
+# THE DUMMY QUESTIONS
 async def slow_periodic_messages(websocket):
     try:
         while True:

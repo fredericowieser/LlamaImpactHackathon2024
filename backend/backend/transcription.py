@@ -17,12 +17,13 @@ def join_transcriptions(history: str, new_text: str) -> str:
     Returns:
         str: The combined text.
     """
+    combined_text = ""
     completion = client.chat.completions.create(
         model="llama-3.2-90b-text-preview",
         messages=[
             {
                 "role": "system",
-                "content": "You are a system whose purpose is to join two transcriptions of the same conversation. You have two inputs: the beginning of the conversation and the end, though they will overlap. Your goal is to combine the two transcriptions while removing any overlapping text. The overlapping text may not match exactly, so you must select the most appropriate version for your output. The accuracy of the output is of the utmost importance, peoples’ lives may depend on it."
+                "content": "You are a system whose purpose is to join two transcriptions of the same conversation. You have two inputs: the beginning of the conversation and the end, though they will overlap. Your goal is to combine the two transcriptions while removing any overlapping text. The overlapping text may not match exactly, so you must select the most appropriate version for your output. The accuracy of the output is of the utmost importance, peoples' lives may depend on it."
             },
             {
                 "role": "user",
@@ -36,8 +37,12 @@ def join_transcriptions(history: str, new_text: str) -> str:
         stop=None,
     )
 
+    # Collect the streamed response
     for chunk in completion:
-        print(chunk.choices[0].delta.content or "", end="")
+        if chunk.choices[0].delta.content:
+            combined_text += chunk.choices[0].delta.content
+
+    return combined_text
 
       
 def transcibe_conv_slice(audio_filename: str, start_timestamp: int, length: int) -> str:
