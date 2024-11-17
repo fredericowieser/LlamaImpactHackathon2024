@@ -41,7 +41,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-"""Maintains a history of the conversation."""
+
+#Maintains a history of the conversation.
 class ConversationHistory:
     def __init__(self, client: Groq, joiner_prompt: str):
         self.transcript: str = ""
@@ -160,7 +161,7 @@ class ConversationManager:
         self.client = client
         self.prompts = prompts
         self.conversation = ConversationHistory(client, prompts['joiner'])
-        self.audio_processor = AudioProcessor()
+        self.audio_processor = AudioProcessor(client)
         self.last_update_time = 0
         self.update_interval = 10  # Seconds between updates to client
         logger.info("✅ ConversationManager initialized")
