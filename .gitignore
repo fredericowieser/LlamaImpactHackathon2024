@@ -1,0 +1,22 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.python-version
+
+# venv
+.venv
+
+# rye
+requirements-dev.lock
+requirements.lock
+pyproject.toml
+
+# mac files
+.DS_Store
+
+# audio files
+audio/
