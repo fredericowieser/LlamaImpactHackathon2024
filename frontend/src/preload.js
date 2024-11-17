@@ -1,7 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-    const startButton = document.getElementById("startButton");
     const backButton = document.getElementById("backButton");
-    const introScreen = document.getElementById("introScreen");
     const mainScreen = document.getElementById("mainScreen");
     const messageInput = document.getElementById("messageInput");
 
@@ -41,16 +39,9 @@ window.addEventListener("DOMContentLoaded", () => {
         console.log("WebSocket closed");
     };
 
-    // Navigation logic
-    startButton.addEventListener("click", () => {
-        introScreen.classList.replace("visible", "hidden");
-        mainScreen.classList.replace("hidden", "visible");
-    });
-
+    // Back button functionality
     backButton.addEventListener("click", () => {
-        mainScreen.classList.replace("visible", "hidden");
-        introScreen.classList.replace("hidden", "visible");
-
+        console.log("Back button clicked");
         // Clear the input field and messages
         messageInput.value = ""; // Clear the input field
         fastMessagesDiv.innerHTML = ""; // Clear fast messages

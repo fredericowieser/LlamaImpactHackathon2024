@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <title>Llama Hack</title>
     <style>
         /* General styles */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.05);
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
+            overflow: hidden; /* Prevent overall app scrolling */
         }
+        /* Top bar (draggable area) */
+        #topBar {
+            height: 25px;
+            background-color: none;
+            -webkit-app-region: drag; /* Makes the top bar draggable */
+            user-select: none; /* Prevents text selection */
+            border-bottom: 0.5px solid rgb(66, 66, 66); /* Adds 1px grey border to the bottom */
+        }
+
 
         /* Main screen container */
         #mainScreen {
@@ -22,7 +35,8 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 20px;
-            height: 100%;
+            height: calc(100% - 30px); /* Adjust for top bar height */
+            overflow: hidden; /* Prevent main screen scrolling */
         }
 
         /* Message containers */
@@ -30,16 +44,16 @@
             display: flex;
             flex-direction: row;
             gap: 20px; /* Space between the two divs */
-            flex-grow: 1;
+            height: calc(100% - 60px); /* Ensure it fits above the input container */
         }
 
         #fastMessages,
         #slowMessages {
-            background-color: blue;
-            color: white;
+            background-color: none; /* No background */
+            color: white; /* White text */
             padding: 10px;
-            overflow-y: auto;
-            height: 100%;
+            overflow-y: auto; /* Enable scrolling for overflowing content */
+            flex: 1;
             border-radius: 10px;
         }
 
@@ -56,36 +70,57 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            height: 60px; /* Fixed height for input container */
+        }
+
+        /* Wrapper for input and button */
+        #inputWrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 10px; /* Space between input and button */
+            padding: 0 40px; /* Add padding to squash input and button inward */
+            width: 100%; /* Take full width of the input container */
         }
 
         #messageInput {
+            font-family: 'Roboto', sans-serif;
+            font-size: 12px;
             flex-grow: 1; /* Input field takes up the remaining space */
             padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            border-radius: 10px; /* Rounds the corners */
+            border: none; /* Removes the border */
+            background-color: rgba(18, 18, 18, 0.8); /* Dark grey with opacity */
+            color: white; /* Text colour white */
+            caret-color: white; /* Set caret colour to white */
+            user-select: none; /* Disable text selection */
+            outline: none; /* Removes default focus outline */
         }
 
+        /* Prevent any focus effects */
+        #messageInput:focus {
+            outline: none; /* No outline on focus */
+        }
+
+
+
+
         #backButton {
-            background-color: lightgray;
-            border: 1px solid #ccc;
-            padding: 10px 15px;
-            font-size: 14px;
-            border-radius: 5px;
+            background-color: rgba(18, 18, 18, 0.8);
+            color: white;
+            border: none;
+            padding: 0px 10px;
+            font-size: 11px;
+            border-radius: 9px;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <!-- Intro Screen -->
-    <div id="introScreen" class="visible">
-        <h1>Welcome to Llama Hack</h1>
-        <button id="startButton">Enter App</button>
-    </div>
+    <!-- Top Bar -->
+    <div id="topBar"></div>
 
     <!-- Main App Screen -->
-    <div id="mainScreen" class="hidden">
+    <div id="mainScreen">
         <!-- Two blue divs for messages -->
         <div class="messageContainer">
             <div id="fastMessages">fast_periodic_messages</div>
@@ -94,8 +129,10 @@
 
         <!-- Input container -->
         <div id="inputContainer">
-            <input type="text" id="messageInput" placeholder="Type your message..." required />
-            <button id="backButton">Back</button>
+            <div id="inputWrapper">
+                <input type="text" id="messageInput" placeholder="Type here..." required />
+                <button id="backButton">⌘+R</button>
+            </div>
         </div>
     </div>
 </body>
